@@ -2,7 +2,7 @@ import './css/styles.css';
 import { fetchCountries } from './fetchCountries.js';
 import debounce from 'lodash.debounce';
 import { Notify } from 'notiflix/build/notiflix-notify-aio';
-
+import { createLongMarkup, createShortMarkup } from './renderCountries.js';
 const input = document.getElementById('search-box');
 const countryList = document.querySelector('.country-list');
 const DEBOUNCE_DELAY = 300;
@@ -15,15 +15,11 @@ function getCountry(evt) {
 
   if (countryName === '') {
     cleanMarkup();
+    return;
   }
 
   fetchCountries(countryName)
     .then(data => {
-      if (data.status === 404) {
-        throw new Error(
-          Notify.failure('Oops, there is no country with that name')
-        );
-      } // Отлавливаю ошибку
       if (data.length > 10) {
         Notify.info(
           'Too many matches found. Please enter a more specific name.'
@@ -35,38 +31,15 @@ function getCountry(evt) {
         cleanMarkup();
         sortLanguagesToArray(data);
         //перебирает массив языков и возвращает массив нормальных названий языков (не официальных)
-        let stringOfCountryLanguages = arrayOfCountryLanguages.join(',');
+        let stringOfCountryLanguages = arrayOfCountryLanguages.join(', ');
         createLongMarkup(data, stringOfCountryLanguages);
         arrayOfCountryLanguages = [];
         // каждый раз после ввода в инпут страны которая возвращает один элемент очищает массив стран, тем самым languages не повторяются после каждого повторного ввода страны которая соответствует условию
       }
     })
     .catch(error => {
-      return error;
+      console.log(error);
     });
-}
-
-function createShortMarkup(arr) {
-  const markup = arr
-    .map(country => {
-      return `<li class="country-item"><img src="${country.flags.svg}" width="39px" height="39px" alt="${country.name}">${country.name}</li>`;
-    })
-    .join('');
-  countryList.insertAdjacentHTML('afterbegin', markup);
-}
-
-function createLongMarkup(arr, languages) {
-  // принимает два параметра -  первый - это массив стран с заданыннми параматрами в строке HTTP запроса, второй это строка языков который являются официальными в заданной стране.
-  const markup = arr
-    .map(country => {
-      return ` <div class="flag-and-name-wrap"><img src="${country.flags.svg}" alt="${country.name}" width="39px" height="39px" />
-      <p> ${country.name}</p></div>  
-      <p class="country-text">Capital: ${country.capital}</p>
-      <p class="country-text">Population: ${country.population}</</p>
-      <p class="country-text">Languages: ${languages}</p>`;
-    })
-    .join('');
-  countryList.insertAdjacentHTML('afterbegin', markup);
 }
 
 function cleanMarkup() {
