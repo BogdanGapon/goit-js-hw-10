@@ -19,6 +19,11 @@ function getCountry(evt) {
 
   fetchCountries(countryName)
     .then(data => {
+      if (data.status === 404) {
+        throw new Error(
+          Notify.failure('Oops, there is no country with that name')
+        );
+      } // Отлавливаю ошибку
       if (data.length > 10) {
         Notify.info(
           'Too many matches found. Please enter a more specific name.'
